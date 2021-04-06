@@ -17,7 +17,7 @@ CLOCK_Configure();
 
 // configuration du Timer 4 en débordement 100ms
 	
-Timer_1234_Init_ff(TIM4,655.2);
+Timer_1234_Init_ff(TIM4,655);
 	
 	
 // Activation des interruptions issues du Timer 4
