@@ -63,7 +63,11 @@ Init ; initialisation des registres
 	
 	LDR R5,=Son
 	STR R5, [R7] ; On stocke l'adresse du début du tableau Son dans IndexTable
+<<<<<<< HEAD
 	mov R4, R5 ; On move l'adresse du début de Son dans R4
+=======
+	mov R4, R5 ; On move l'adresse du début de Son dans R1
+>>>>>>> 7e4ba64c5aea41e1f244fe83b1a4ef9f58c438de
 	
 	b Continue_Callback
 
