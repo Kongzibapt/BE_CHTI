@@ -1,5 +1,7 @@
 	PRESERVE8
-	THUMB   
+	THUMB  
+
+	include ../Driver/DriverJeuLaser.inc
 		
 
 ; ====================== zone de réservation de données,  ======================================
@@ -27,33 +29,41 @@ IndexTable dcd 0
 
 	EXPORT CallbackSon
 	EXTERN Son
+	EXTERN CLOCK_Configure
+	EXTERN Timer_1234_Init_ff
+	EXTERN PWM_Init_ff
 
-CallbackSon proc
+CallbackSon proc ; A partir des valeurs du tableau Son, 
+		 ; convertit les valeurs pour qu'elles soient entre 0 et 719 (*45/4096) 
+		 ; et on met ces valeurs dans SortieSon
 	
-	LDR R0,=IndexTable
-	LDR R3,=SortieSon
-	LDR R1,[R0] ; On stocke dans R1 : la valeur de R0
-	cmp R1, #0 ; si IndexTable est égal à 0 : initialisation
+	PUSH {R4, R5, R6, R7, LR} 
+	LDR R7,=IndexTable
+	LDR R6,=SortieSon
+	LDR R4,[R7]
+	cmp R4, #0 ; 
 	beq Init
 	
 Continue_Callback
 
-	ADD R1,#2
-	STR R1, [R0] ; Mise à jour de IndexTable (décalage)
-	LDRSH R1,[R1] ; S : signed / H : Half-word : On met la valeur de R1 dans R1
-	MOV R2, #45
-	MUL R1,R2
-	ASR R1,#12 ; SDIV R1,R2 (au cas ou)
-	ADD R1, #360 ; On replace les valeurs entre 0 et 719
-	STR R1,[R3]
-	BX LR
+	ADD R4,#2
+	STR R4, [R7] ; Mise à jour de IndexTable (décalage)
+	LDRSH R4,[R4] ; S : signed / H : Half-word
+	MOV R5, #45 
+	MUL R4,R5
+	ASR R4,#12 ; On fait l'opération *(45/4096)
+	ADD R4, #360 ; On décale les valeurs pour qu'elles soient entre 0 et 719
+	STR R4,[R6]
+	MOV R0, R4
+	BL PWM_Set_Value_TIM3_Ch3
+	POP {R4, R5, R6, R7, PC}
 	
 	
-Init
+Init ; initialisation des registres
 	
-	LDR R2,=Son
-	STR R2, [R0] ; On stocke l'adresse du début du tableau Son dans IndexTable
-	mov R1, R2 ; On move l'adresse du début de Son dans R1
+	LDR R5,=Son
+	STR R5, [R7] ; On stocke l'adresse du début du tableau Son dans IndexTable
+	mov R4, R5 ; On move l'adresse du début de Son dans R4
 	
 	b Continue_Callback
 
@@ -61,5 +71,14 @@ Init
 
 
 	endp	
-		
+
+
+StartSon proc ; lanceur de séquence
+
+    ldr r0,=IndexTable
+    mov r1, #0
+    str r1, [r0]
+    bx lr
+    endp
+	
 	END
